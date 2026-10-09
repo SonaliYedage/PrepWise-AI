@@ -8,6 +8,7 @@ const Home = () => {
     const { loading, generateReport,reports } = useInterview()
     const [ jobDescription, setJobDescription ] = useState("")
     const [ selfDescription, setSelfDescription ] = useState("")
+    const [resumeFile, setResumeFile] = useState(null)
     const resumeInputRef = useRef()
 
     const navigate = useNavigate()
@@ -81,9 +82,23 @@ const Home = () => {
                                 </span>
                                 <p className='dropzone__title'>Click to upload or drag &amp; drop</p>
                                 <p className='dropzone__subtitle'>PDF or DOCX (Max 5MB)</p>
-                                <input ref={resumeInputRef} hidden type='file' id='resume' name='resume' accept='.pdf,.docx' />
-                            </label>
+                                <input
+                                    ref={resumeInputRef}
+                                    hidden
+                                    type='file'
+                                    id='resume'
+                                    name='resume'
+                                    accept='.pdf,.docx'
+                                    onChange={(e) => {
+                                        const file = e.target.files[0]
+                                        setResumeFile(file || null)
+                                    }}
+/>                            </label>
                         </div>
+
+                        {resumeFile && (
+                            <p>Selected resume: {resumeFile.name}</p>
+                        )}
 
                         {/* OR Divider */}
                         <div className='or-divider'><span>OR</span></div>
