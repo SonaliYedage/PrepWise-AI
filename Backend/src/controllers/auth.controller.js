@@ -68,9 +68,10 @@ async function registerUserController(req, res) {
  * @access Public
  */
 async function loginUserController(req, res) {
-
+    console.log("LOGIN REQUEST RECEIVED");
     const { email, password } = req.body
-
+    console.log("LOGIN EMAIL RECEIVED");
+    console.log("DATABASE USER QUERY COMPLETED");
     const user = await userModel.findOne({ email })
 
     if (!user) {
