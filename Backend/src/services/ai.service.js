@@ -8,6 +8,33 @@ const ai = new GoogleGenAI({
 })
 
 
+async function generateContentWithRetry(options, maxAttempts = 3) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await ai.models.generateContent(options);
+        } catch (error) {
+            const message = String(error.message || "");
+
+            const isTemporaryError =
+                error.status === 503 ||
+                error.code === 503 ||
+                /503|UNAVAILABLE|high demand|overloaded/i.test(message);
+
+            if (!isTemporaryError || attempt === maxAttempts) {
+                throw error;
+            }
+
+            const delayMs = 1000 * (2 ** (attempt - 1));
+
+            console.warn(
+                `Gemini temporarily unavailable. Retry ${attempt + 1}/${maxAttempts} in ${delayMs}ms.`
+            );
+
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+}
+
 const interviewReportSchema = z.object({
     matchScore: z.number().describe("A score between 0 and 100 indicating how well the candidate's profile matches the job describe"),
     technicalQuestions: z.array(z.object({
@@ -41,7 +68,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
                         Job Description: ${jobDescription}
 `
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
         model: "gemini-3.8-flash",
         contents: prompt,
         config: {
@@ -95,7 +122,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                         The resume should not be so lengthy, it should ideally be 1-2 pages long when converted to PDF. Focus on quality rather than quantity and make sure to include all the relevant information that can increase the candidate's chances of getting an interview call for the given job description.
                     `
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
         model: "gemini-3.8-flash",
         contents: prompt,
         config: {
